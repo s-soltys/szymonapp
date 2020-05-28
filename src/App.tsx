@@ -8,50 +8,62 @@ function App() {
         <div className="App">
             <header className="App-header">
                 <img src={logo} className="App-logo" alt="logo" />
-                <p>
-                    Edit <code>src/App.tsx</code> and save to reload.
-                    <Chat />
-                </p>
-                <a
-                    className="App-link"
-                    href="https://reactjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Learn React
-                </a>
+                <Chat />
             </header>
         </div>
     );
 }
 
 function Chat() {
-    const [posts, setPosts] = useState([]);
+    const [newItem, setNewItem] = useState("");
+    const [posts, setPosts] = useState([] as any[]);
 
-    const addCallback = useCallback(() => {
-      db.collection("posts").add({
-        name: 'Ajtem',
-        content: `Data ${new Date().toISOString()} stworzono`
-      })
-      .then(docRef => console.log("Document written with ID: ", docRef.id))
-    }, []);
-
-    useEffect(() => {
+    function loadItems() {
         db.collection("posts")
             .get()
             .then((snapshot) => {
-              snapshot.
+                const dataToSet = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    name: doc.get("name"),
+                    content: doc.get("content")
+                }));
+                setPosts(dataToSet);
             });
-    }, []);
+    }
+
+    const addCallback = useCallback(() => {
+        db.collection("posts")
+            .add({
+                name: newItem,
+                content: new Date().toISOString(),
+            })
+            .then((docRef) => {
+                setNewItem("");
+                loadItems();
+            });
+    }, [newItem]);
+
+    useEffect(loadItems, []);
 
     return (
         <div>
-            <h1 onClick={addCallback}>ADD NEW</h1>
+            <div>
+                <input
+                    type="text"
+                    value={newItem}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        setNewItem(value);
+                    }}
+                />
+                <button type="button" onClick={addCallback}>ADD</button>
+            </div>
             {(posts || []).map((post) => {
                 return (
                     <div>
-                        <span>{post.name}</span>
-                        <span>{post.content}</span>
+                        <span>{post.name}</span> / 
+                        <small>{post.id}</small> / 
+                        <small>{post.content}</small>
                     </div>
                 );
             })}
