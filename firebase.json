@@ -1,0 +1,6 @@
+{
+    "hosting": {
+        "site": "szymonapp-5bd11",
+        "public": "build"
+    }
+}
